@@ -5,76 +5,94 @@ import java.util.ArrayList;
 
 public class Server {
 
-
     int port;
-    ArrayList<ClientSlave>clientsSlaves = new ArrayList<ClientSlave>();
-    Object object = new Object();
-    public ArrayList<ClientSlave> getClientsSlave()
-    {
+    public ArrayList<ClientSlave> clientsSlaves = new ArrayList<ClientSlave>();
+    public ArrayList<Topic> topics = new ArrayList<Topic>();
+
+    public ArrayList<ClientSlave> getClientsSlave() {
         return this.clientsSlaves;
     }
+    public ArrayList<Topic> getTopics(){ return this.topics; }
 
-    public void sendMessage(String message,String nameClient)
-    {
-        synchronized (object)
-        {
-            PrintWriter out;
-            for(ClientSlave clientSlave :clientsSlaves)
-            {
-                if((clientSlave.nameClient).equals(nameClient))
-                {
-                    try {
-                        out=new PrintWriter(new DataOutputStream((clientSlave.socket).getOutputStream()),true);
-                        out.println(message);
-//                        System.out.println("4");
-                        break;
-                    }catch(IOException e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
+    public synchronized boolean addTopic(Topic topic) { // add a new topic with a type doesn't exist
+        for (Topic topic_index : topics) {
+            if ((topic_index.getType()).equals(topic.getType())) {
+                return false;
             }
         }
-
+        this.topics.add(topic);
+        new EraserTopics(topic, this).start();
+        return true;
     }
 
-    public Server(int port)
+    public synchronized void eraseTopic(Topic topic) // erase a topic when time to leave expires
     {
-        this.port=port;
+        int index_current = 0;
+        for (Topic topic_index : topics) {
+            if (topic_index.equals(topic)) {
+                topics.remove(index_current);
+                return;
+            }
+            index_current++;
+        }
     }
 
-    public static void main (String argv[])
-    {
-        Server server = new Server(5555);
-        server.execute();
+    public synchronized ArrayList<String> getAllTopicsType() {
+        ArrayList<String> topics_type = new ArrayList<String>();
+        if(topics.size()==0) return null;
+        for (Topic topic : topics) {
+            topics_type.add(topic.getType());
+        }
+        return topics_type;
     }
 
-    public void execute()
-    {
-        System.out.println("Server started ...");
-        try (ServerSocket serverSocket = new ServerSocket(port))
-        {
-            PrintWriter out ;
-            BufferedReader in;
-            String response;
-            System.out.println("Chat Server is listening on port " + port);
-            while (true)
+    public synchronized ArrayList<String> getMessagesFromTopic(String type_of_topic) {
+        for (Topic topic : topics) {
+            if ((topic.getType()).equals(type_of_topic))
             {
+                if(topic.getMessages()!=null)
+                    return topic.getMessages();
+            }
+        }
+        return null;
+    }
+
+    public synchronized boolean writeInTopic(String type_of_topic, String message,int time_to_leave) {
+        for (Topic topic : topics) {
+            if ((topic.getType()).equals(type_of_topic)) {
+                topic.addMessage(message);
+                new EraserMessages(topic,time_to_leave,message,this).start();
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public Server(int port) {
+        this.port = port;
+    }
+
+
+    public void execute() {
+        System.out.println("Server started ...");
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Chat Server is listening on port " + port);
+            while (true) {
                 Socket socket = serverSocket.accept();
-                out = new PrintWriter(new DataOutputStream(socket.getOutputStream()),true);
-                in= new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-
-
-                ClientSlave clientSlave = new ClientSlave(this,socket);
+                ClientSlave clientSlave = new ClientSlave(this, socket);
                 clientsSlaves.add(clientSlave);
                 clientSlave.start();
             }
-        } catch (IOException ex)
-        {
+        } catch (IOException ex) {
             System.out.println("Error in the server: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+
+    public static void main(String argv[]) {
+        Server server = new Server(5555);
+        server.execute();
     }
 }
 

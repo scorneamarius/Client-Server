@@ -5,19 +5,25 @@ public class ClientWriter extends Thread {
 
     Socket socket;
     Client client;
+    BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
+    PrintWriter out;
 
     public ClientWriter(Socket socket,Client client)
     {
         this.socket=socket;
         this.client=client;
+        try {
+            out = new PrintWriter(new DataOutputStream(socket.getOutputStream()),true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
 
     public void run()
     {
-
+        out.println(client.name);
         try {
-            BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
-            PrintWriter out = new PrintWriter(new DataOutputStream(socket.getOutputStream()),true);
             while(true)
             {
                 String input = keyboard.readLine();
