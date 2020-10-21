@@ -64,12 +64,9 @@ public class Server {
                 out = new PrintWriter(new DataOutputStream(socket.getOutputStream()),true);
                 in= new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                out.println("What's your name?");
-                response=in.readLine();
 
-                System.out.println(response + " has connected to the server!");
 
-                ClientSlave clientSlave = new ClientSlave(this,socket,response);
+                ClientSlave clientSlave = new ClientSlave(this,socket);
                 clientsSlaves.add(clientSlave);
                 clientSlave.start();
             }

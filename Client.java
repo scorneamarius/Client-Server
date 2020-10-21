@@ -7,9 +7,10 @@ public class Client {
     String hostname;
     String name;
 
-    public Client(int port , String hostname){
+    public Client(int port , String hostname , String name){
         this.port=port;
         this.hostname=hostname;
+        this.name=name;
     }
 
     public void execute()
@@ -18,16 +19,6 @@ public class Client {
 
             Socket socket=new Socket(hostname,port);
             System.out.println("Connected to the server!");
-
-            BufferedReader inputFromServer= new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter out = new PrintWriter(new DataOutputStream(socket.getOutputStream()),true);
-            BufferedReader keyboard= new BufferedReader(new InputStreamReader(System.in));
-
-            String response=inputFromServer.readLine();
-            System.out.println(response);
-            response=keyboard.readLine();
-            this.name=response;
-            out.println(response);
 
             ClientReader clientReader = new ClientReader(socket , this);
             ClientWriter clientWriter = new ClientWriter(socket, this );
@@ -43,7 +34,17 @@ public class Client {
 
     public static void main (String args[]) {
 
-        Client client = new Client(5555, "localhost");
+        System.out.println("Type your name please ");
+        BufferedReader keyboard= new BufferedReader(new InputStreamReader(System.in));
+        String name = null;
+        try {
+            name = keyboard.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Client client = new Client(5555, "localhost",name);
+
         client.execute();
+
     }
 }

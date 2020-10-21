@@ -16,10 +16,8 @@ public class ClientWriter extends Thread {
     {
 
         try {
-
             BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
             PrintWriter out = new PrintWriter(new DataOutputStream(socket.getOutputStream()),true);
-
             while(true)
             {
                 String input = keyboard.readLine();
