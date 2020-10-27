@@ -31,6 +31,8 @@ public class ClientSlave extends Thread {
             clientOutput.println("To see TOPICS_TYPE available type -> read topics_type");
             clientOutput.println("To display message from a topic -> display message | [type of topic]");
             clientOutput.println("To write in a topic type -> write | [type_of_topic] | [message] | [time_to_leave_in_minutes]");
+            clientOutput.println("To send message in queue -> send message in queue | [message] | [receiver]");
+            clientOutput.println("To receive all message from queue -> receive messages");
         } else if (response.contains("add topic")) {
             String[] arrayWords = response.split("\\| ");
             String type_of_topic = arrayWords[1].substring(0, arrayWords[1].length() - 1);
@@ -70,11 +72,32 @@ public class ClientSlave extends Thread {
             String type_of_topic = arrayWords[1].substring(1,arrayWords[1].length()-1);
             String message = arrayWords[2].substring(1,arrayWords[2].length()-1);
             int time_to_leave = Integer.parseInt(arrayWords[3].substring(1));
-//            System.out.println(type_of_topic + " "+message+" "+time_to_leave);
             if(server.writeInTopic(type_of_topic,message,time_to_leave)==true)
                 clientOutput.println("Writing in topic succeded");
             else
                 clientOutput.println("The topic doesn't exists or it expires");
+        }else if(response.contains("send message in queue"))
+        {
+            String[] arrayWords = response.split("\\|");
+            String message = arrayWords[1].substring(1, arrayWords[1].length() - 1);
+            String receiver = arrayWords[2].substring(1);
+            System.out.println(message+receiver);
+            String transmitter=nameClient;
+            Message message1 = new Message(message,receiver,transmitter);
+            server.addMessageInQueue(message1);
+        }
+        else if(response.contains("receive messages"))
+        {
+            ArrayList <Message> messages=server.receiveMessagesFromQueue(this.nameClient);
+            if(messages.size()!=0)
+            {
+                for(Message m : messages)
+                {
+                    clientOutput.println(m.displayMessage());
+                }
+            }
+            else
+                clientOutput.println("No messages available");
         }
     }
     public void run() {

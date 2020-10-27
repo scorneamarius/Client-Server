@@ -2,17 +2,67 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-
 public class Server {
+    private int port;
 
-    int port;
-    public ArrayList<ClientSlave> clientsSlaves = new ArrayList<ClientSlave>();
-    public ArrayList<Topic> topics = new ArrayList<Topic>();
+    private ArrayList<ClientSlave> clientsSlaves = new ArrayList<ClientSlave>();
+    private ArrayList<Topic> topics = new ArrayList<Topic>();
+    private ArrayList<Message> messages = new ArrayList<Message>();
+    private int maximumCapacityQueue=30;
 
     public ArrayList<ClientSlave> getClientsSlave() {
         return this.clientsSlaves;
     }
     public ArrayList<Topic> getTopics(){ return this.topics; }
+
+
+    public synchronized void addMessageInQueue(Message message)
+    {
+        if(messages.size()==maximumCapacityQueue)
+            messages.remove(0);
+        this.messages.add(message);
+        for(Message m : messages)
+        {
+            System.out.println(m.displayMessage());
+        }
+    }
+
+    public synchronized void removeMessageFromQueue(Message m)
+    {
+        ArrayList<Message> messagesAUX = new ArrayList<Message>();
+        int index=0;
+
+        for(Message message : messages)
+        {
+            if(!((message.displayMessage()).equals(m.displayMessage())))
+            {
+                messagesAUX.add(message);
+            }
+            index++;
+        }
+        this.messages=messagesAUX;
+    }
+
+    public synchronized ArrayList<Message> receiveMessagesFromQueue(String receiver)
+    {
+        ArrayList<Message> m = new ArrayList<Message>();
+        for(Message message : messages)
+        {
+            if((message.getReceiver().equals(receiver)))
+            {
+                m.add(new Message(message.getMessage(),message.getReceiver(),message.getTransmitter()));
+            }
+        }
+        for (Message message : m)
+        {
+            removeMessageFromQueue(message);
+        }
+        return m;
+    }
+    public synchronized void deleteMessageFromQueue(Message message)
+    {
+        messages.remove(message);
+    }
 
     public synchronized boolean addTopic(Topic topic) { // add a new topic with a type doesn't exist
         for (Topic topic_index : topics) {
