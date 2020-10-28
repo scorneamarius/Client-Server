@@ -19,10 +19,10 @@ public class ClientWriter extends Thread {
         }
     }
 
-
     public void run()
     {
         out.println(client.name);
+        System.out.println("Welcome " + client.name + "!");
         try {
             while(true)
             {
@@ -33,5 +33,4 @@ public class ClientWriter extends Thread {
             e.printStackTrace();
         }
     }
-
 }

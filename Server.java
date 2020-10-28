@@ -2,19 +2,23 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+
 public class Server {
+
     private int port;
 
     private ArrayList<ClientSlave> clientsSlaves = new ArrayList<ClientSlave>();
     private ArrayList<Topic> topics = new ArrayList<Topic>();
     private ArrayList<Message> messages = new ArrayList<Message>();
-    private int maximumCapacityQueue=30;
+    private int maximumCapacityQueue=5;
 
     public ArrayList<ClientSlave> getClientsSlave() {
         return this.clientsSlaves;
     }
-    public ArrayList<Topic> getTopics(){ return this.topics; }
 
+    public ArrayList<Topic> getTopics() {
+        return this.topics;
+    }
 
     public synchronized void addMessageInQueue(Message message)
     {
@@ -59,6 +63,7 @@ public class Server {
         }
         return m;
     }
+
     public synchronized void deleteMessageFromQueue(Message message)
     {
         messages.remove(message);
@@ -118,11 +123,9 @@ public class Server {
         return false;
     }
 
-
     public Server(int port) {
         this.port = port;
     }
-
 
     public void execute() {
         System.out.println("Server started ...");
@@ -140,10 +143,8 @@ public class Server {
         }
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] argv) {
         Server server = new Server(5555);
         server.execute();
     }
 }
-
-
