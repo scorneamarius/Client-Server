@@ -19,6 +19,10 @@ public class Message {
     {
         return this.transmitter+": "+this.message+"("+this.receiver+")";
     }
+    public String displayMessage2()
+    {
+        return this.transmitter+": "+this.message;
+    }
 
 }
 

@@ -18,7 +18,7 @@ public class Client {
         try {
 
             Socket socket=new Socket(hostname,port);
-            System.out.println("Connected to the server!");
+            System.out.println("Connected to the server.");
 
             ClientReader clientReader = new ClientReader(socket , this);
             ClientWriter clientWriter = new ClientWriter(socket, this );
@@ -29,12 +29,11 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
-    public static void main (String args[]) {
+    public static void main (String[] args) {
 
-        System.out.println("Type your name please ");
+        System.out.println("Type your name: ");
         BufferedReader keyboard= new BufferedReader(new InputStreamReader(System.in));
         String name = null;
         try {
@@ -42,9 +41,8 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         Client client = new Client(5555, "localhost",name);
-
         client.execute();
-
     }
 }

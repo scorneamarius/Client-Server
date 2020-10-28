@@ -1,8 +1,6 @@
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
-
 import static java.lang.Integer.parseInt;
 
 public class ClientSlave extends Thread {
@@ -27,21 +25,24 @@ public class ClientSlave extends Thread {
     private void executeTask(String response) {
 
         if (response.equals("menu")) {
+
             clientOutput.println("For add TOPICS type -> add topic | [type_of_topic] | [time_to_leave_in_minutes]");
             clientOutput.println("To see TOPICS_TYPE available type -> read topics_type");
             clientOutput.println("To display message from a topic -> display message | [type of topic]");
             clientOutput.println("To write in a topic type -> write | [type_of_topic] | [message] | [time_to_leave_in_minutes]");
             clientOutput.println("To send message in queue -> send message in queue | [message] | [receiver]");
             clientOutput.println("To receive all message from queue -> receive messages");
+
         } else if (response.contains("add topic")) {
             String[] arrayWords = response.split("\\| ");
             String type_of_topic = arrayWords[1].substring(0, arrayWords[1].length() - 1);
             int time_to_leave_in_minutes = parseInt(arrayWords[2]);
             System.out.println(type_of_topic + " "+time_to_leave_in_minutes);
-            if (server.addTopic(new Topic(type_of_topic, time_to_leave_in_minutes)) == true)
-                clientOutput.println("Topic added with succesfully");
+            if (server.addTopic(new Topic(type_of_topic, time_to_leave_in_minutes)))
+                clientOutput.println("Topic added with successfully");
             else
                 clientOutput.println("Sorry but a topic with this type already exists");
+
         } else if (response.equals("read topics_type")) {
             ArrayList<String> topics_type = server.getAllTopicsType();
             if (topics_type ==null)
@@ -55,6 +56,7 @@ public class ClientSlave extends Thread {
                     clientOutput.println("Topic " + index_topic_type++ + " : " + topic);
                 }
             }
+
         } else if (response.contains("display message ")) {
             String[] arrayWords = response.split("\\| ");
             String type_of_topic = arrayWords[1];
@@ -66,18 +68,19 @@ public class ClientSlave extends Thread {
             } else {
                 clientOutput.println("Sorry but this topic doesn't exist , it expires or it haven't any messages");
             }
+
         }else if(response.contains("write"))
         {
             String[] arrayWords = response.split("\\|");
             String type_of_topic = arrayWords[1].substring(1,arrayWords[1].length()-1);
             String message = arrayWords[2].substring(1,arrayWords[2].length()-1);
             int time_to_leave = Integer.parseInt(arrayWords[3].substring(1));
-            if(server.writeInTopic(type_of_topic,message,time_to_leave)==true)
-                clientOutput.println("Writing in topic succeded");
+            if(server.writeInTopic(type_of_topic, message, time_to_leave))
+                clientOutput.println("Writing in topic succeeded");
             else
                 clientOutput.println("The topic doesn't exists or it expires");
-        }else if(response.contains("send message in queue"))
-        {
+
+        }else if(response.contains("send message in queue")) {
             String[] arrayWords = response.split("\\|");
             String message = arrayWords[1].substring(1, arrayWords[1].length() - 1);
             String receiver = arrayWords[2].substring(1);
@@ -85,21 +88,21 @@ public class ClientSlave extends Thread {
             String transmitter=nameClient;
             Message message1 = new Message(message,receiver,transmitter);
             server.addMessageInQueue(message1);
-        }
-        else if(response.contains("receive messages"))
-        {
+
+        }else if(response.contains("receive messages")) {
             ArrayList <Message> messages=server.receiveMessagesFromQueue(this.nameClient);
             if(messages.size()!=0)
             {
                 for(Message m : messages)
                 {
-                    clientOutput.println(m.displayMessage());
+                    clientOutput.println("You received a message from " + m.displayMessage2());
                 }
             }
             else
                 clientOutput.println("No messages available");
         }
     }
+
     public void run() {
         try {
             String response;
@@ -111,9 +114,6 @@ public class ClientSlave extends Thread {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-
         }
     }
-
 }

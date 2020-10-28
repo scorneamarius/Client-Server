@@ -4,6 +4,7 @@ public class EraserMessages extends Thread {
     int time_to_leave;
     String message;
     Server server;
+
     public EraserMessages(Topic topic , int time_to_leave , String message,Server server)
     {
         this.topic=topic;
