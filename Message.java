@@ -15,11 +15,11 @@ public class Message {
     public String getReceiver(){return this.receiver;}
     public String getTransmitter(){return this.transmitter;}
 
-    public String displayMessage()
+    public String displayMessageForServer()
     {
-        return this.transmitter+": "+this.message+"("+this.receiver+")";
+        return this.transmitter+": "+this.message+ " -> " +this.receiver;
     }
-    public String displayMessage2()
+    public String displayMessageForClientSlave()
     {
         return this.transmitter+": "+this.message;
     }

@@ -11,9 +11,19 @@ public class Server {
     private ArrayList<Topic> topics = new ArrayList<Topic>();
     private ArrayList<Message> messages = new ArrayList<Message>();
     private int maximumCapacityQueue=5;
+    private ArrayList<String> names = new ArrayList<String>();
 
     public ArrayList<ClientSlave> getClientsSlave() {
         return this.clientsSlaves;
+    }
+
+    public ArrayList<String> getNames(){
+        String n;
+        for(ClientSlave i : clientsSlaves ) {
+            n = i.getNameClient();
+            names.add(n);
+        }
+        return names;
     }
 
     public ArrayList<Topic> getTopics() {
@@ -27,7 +37,7 @@ public class Server {
         this.messages.add(message);
         for(Message m : messages)
         {
-            System.out.println(m.displayMessage());
+            System.out.println(m.displayMessageForServer());
         }
     }
 
@@ -38,7 +48,7 @@ public class Server {
 
         for(Message message : messages)
         {
-            if(!((message.displayMessage()).equals(m.displayMessage())))
+            if(!((message.displayMessageForServer()).equals(m.displayMessageForServer())))
             {
                 messagesAUX.add(message);
             }
