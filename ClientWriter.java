@@ -21,8 +21,10 @@ public class ClientWriter extends Thread {
 
     public void run()
     {
+
         out.println(client.getName());
         System.out.println("Welcome " + client.getName() + "!");
+
         try {
             while(true)
             {

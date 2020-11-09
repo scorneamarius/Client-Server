@@ -17,7 +17,7 @@ public class ClientReader extends Thread {
     {
         try {
             BufferedReader inputFromServer= new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            //BufferedReader keyboard=new BufferedReader(new InputStreamReader(System.in));
+
             String response;
             while(true)
             {

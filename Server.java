@@ -15,9 +15,11 @@ public class Server {
     private Object objectLockTopic=new Object();
     private Object objectLockMessage=new Object();
 
+
     public ArrayList<ClientSlave> getClientsSlave() {
         return this.clientsSlaves;
     }
+
 
     public ArrayList<String> getNames(){
         synchronized (objectLockMessage) {
@@ -156,6 +158,7 @@ public class Server {
             return false;
         }
     }
+
 
     public Server(int port) {
         this.port = port;
