@@ -1,10 +1,11 @@
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ClientReader extends Thread {
 
-    Socket socket;
-    Client client;
+    private Socket socket;
+    private Client client;
 
     public ClientReader(Socket socket , Client client)
     {
@@ -16,15 +17,30 @@ public class ClientReader extends Thread {
     {
         try {
             BufferedReader inputFromServer= new BufferedReader(new InputStreamReader(socket.getInputStream()));
-           
+
             String response;
             while(true)
             {
                 response=inputFromServer.readLine();
+                while(response==null){
+                    try{
+                        Thread.sleep(10);
+                    }catch(InterruptedException ex){
+                        ex.printStackTrace();
+                    }
+                }
+
+                if(response.equals("quit")){
+                    if(this.socket!=null){
+                        socket.close();
+                        break;
+                    }
+                }
                 System.out.println(response);
             }
         } catch (IOException e) {
             e.printStackTrace();
+
         }
     }
 }

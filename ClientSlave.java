@@ -5,11 +5,13 @@ import static java.lang.Integer.parseInt;
 
 public class ClientSlave extends Thread {
 
-    Server server;
-    Socket socket;
-    String nameClient;
-    BufferedReader clientInput;
-    PrintWriter clientOutput;
+    private Server server;
+    private Socket socket;
+    private String nameClient;
+    private BufferedReader clientInput;
+    private PrintWriter clientOutput;
+    private int ok=0;
+
 
 
     public ClientSlave(Server server, Socket socket) {
@@ -34,6 +36,8 @@ public class ClientSlave extends Thread {
             clientOutput.println("DISPLAY MESSAGES FROM A TOPIC -> display message | [type of topic]");
             clientOutput.println("ADD TOPIC -> add topic | [type_of_topic] | [time_to_leave_in_minutes]");
             clientOutput.println("WRITE IN A TOPIC -> write | [type_of_topic] | [message] | [time_to_leave_in_minutes]");
+            clientOutput.println("QUIT -> quit");
+
 
         } else if (response.contains("add topic")) {
             String[] arrayWords = response.split("\\| ");
@@ -90,7 +94,7 @@ public class ClientSlave extends Thread {
             String[] arrayWords = response.split("\\|");
             String message = arrayWords[1].substring(1, arrayWords[1].length() - 1);
             String receiver = arrayWords[2].substring(1);
-           // System.out.println(message+receiver);
+
             System.out.println("Queue Updated:");
             String transmitter=nameClient;
             Message message1 = new Message(message,receiver,transmitter);
@@ -108,23 +112,50 @@ public class ClientSlave extends Thread {
             }
             else
                 clientOutput.println("No messages available.");
+
+        }else if(response.equals("quit")){
+            clientOutput.println(("Bye"));
+            this.server.deleteNameClient(nameClient);
+            if(socket!=null) {
+                try {
+                    this.socket.close();
+                    ok=1;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }else{
+            clientOutput.println("Incorrect command!");
+
         }
+
+
     }
-    public String getNameClient(){
-        return this.nameClient;
-    }
+
 
     public void run() {
         try {
+            try{
+                Thread.sleep(100);
+            }catch(InterruptedException ex){
+                ex.printStackTrace();
+            }
+
             String response;
             response = clientInput.readLine();
             this.nameClient = response;
+            server.addName(nameClient);
             while (true) {
                 response = clientInput.readLine();
                 executeTask(response);
+
+                if(ok==1)
+                    break;
+
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            } catch(IOException e){
+                e.printStackTrace();
+            }
         }
-    }
+
 }

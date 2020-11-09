@@ -1,9 +1,9 @@
 public class EraserMessages extends Thread {
 
-    Topic topic;
-    int time_to_leave;
-    String message;
-    Server server;
+    private Topic topic;
+    private int time_to_leave;
+    private String message;
+    private Server server;
 
     public EraserMessages(Topic topic , int time_to_leave , String message,Server server)
     {
