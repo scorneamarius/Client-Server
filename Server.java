@@ -5,74 +5,161 @@ import java.util.ArrayList;
 
 public class Server {
 
-    int port;
-    public ArrayList<ClientSlave> clientsSlaves = new ArrayList<ClientSlave>();
-    public ArrayList<Topic> topics = new ArrayList<Topic>();
+    private int port;
+
+    private ArrayList<ClientSlave> clientsSlaves = new ArrayList<ClientSlave>();
+    private ArrayList<Topic> topics = new ArrayList<Topic>();
+    private ArrayList<Message> messages = new ArrayList<Message>();
+    private int maximumCapacityQueue=5;
+    private ArrayList<String> names = new ArrayList<String>();
+    private Object objectLockTopic=new Object();
+    private Object objectLockMessage=new Object();
 
     public ArrayList<ClientSlave> getClientsSlave() {
         return this.clientsSlaves;
     }
-    public ArrayList<Topic> getTopics(){ return this.topics; }
 
-    public synchronized boolean addTopic(Topic topic) { // add a new topic with a type doesn't exist
-        for (Topic topic_index : topics) {
-            if ((topic_index.getType()).equals(topic.getType())) {
-                return false;
-            }
+    public ArrayList<String> getNames(){
+        synchronized (objectLockMessage) {
+
+            return names;
         }
-        this.topics.add(topic);
-        new EraserTopics(topic, this).start();
-        return true;
+    }
+    public void addName(String name){
+        synchronized (objectLockMessage) {
+            this.names.add(name);
+        }
     }
 
-    public synchronized void eraseTopic(Topic topic) // erase a topic when time to leave expires
+    public ArrayList<Topic> getTopics() {
+
+        synchronized (objectLockTopic) {
+            return this.topics;
+        }
+    }
+    public void deleteNameClient(String name){
+        synchronized (objectLockMessage) {
+            this.names.remove(name);
+        }
+    }
+
+    public void addMessageInQueue(Message message) {
+        synchronized (objectLockMessage){
+        if (messages.size() == maximumCapacityQueue)
+            messages.remove(0);
+        this.messages.add(message);
+        for (Message m : messages) {
+            System.out.println(m.displayMessageForServer());
+        }
+    }
+    }
+
+    public void removeMessageFromQueue(Message m)
     {
-        int index_current = 0;
-        for (Topic topic_index : topics) {
-            if (topic_index.equals(topic)) {
-                topics.remove(index_current);
-                return;
+        synchronized (objectLockMessage) {
+            ArrayList<Message> messagesAUX = new ArrayList<Message>();
+            int index = 0;
+
+            for (Message message : messages) {
+                if (!((message.displayMessageForServer()).equals(m.displayMessageForServer()))) {
+                    messagesAUX.add(message);
+                }
+                index++;
             }
-            index_current++;
+            this.messages = messagesAUX;
         }
     }
 
-    public synchronized ArrayList<String> getAllTopicsType() {
-        ArrayList<String> topics_type = new ArrayList<String>();
-        if(topics.size()==0) return null;
-        for (Topic topic : topics) {
-            topics_type.add(topic.getType());
+    public ArrayList<Message> receiveMessagesFromQueue(String receiver)
+    {
+        synchronized (objectLockMessage) {
+            ArrayList<Message> m = new ArrayList<Message>();
+            for (Message message : messages) {
+                if ((message.getReceiver().equals(receiver))) {
+                    m.add(new Message(message.getMessage(), message.getReceiver(), message.getTransmitter()));
+                }
+            }
+            for (Message message : m) {
+                removeMessageFromQueue(message);
+            }
+            return m;
         }
-        return topics_type;
     }
 
-    public synchronized ArrayList<String> getMessagesFromTopic(String type_of_topic) {
-        for (Topic topic : topics) {
-            if ((topic.getType()).equals(type_of_topic))
-            {
-                if(topic.getMessages()!=null)
-                    return topic.getMessages();
+    public synchronized void deleteMessageFromQueue(Message message)
+    {
+        synchronized (objectLockMessage) {
+            messages.remove(message);
+        }
+    }
+
+    public boolean addTopic(Topic topic) { // add a new topic with a type doesn't exist
+
+        synchronized (objectLockTopic) {
+            for (Topic topic_index : topics) {
+                if ((topic_index.getType()).equals(topic.getType())) {
+                    return false;
+                }
+            }
+            this.topics.add(topic);
+            new EraserTopics(topic, this).start();
+            return true;
+        }
+    }
+
+    public void eraseTopic(Topic topic) // erase a topic when time to leave expires
+    {
+        synchronized (objectLockTopic) {
+            int index_current = 0;
+            for (Topic topic_index : topics) {
+                if (topic_index.equals(topic)) {
+                    topics.remove(index_current);
+                    return;
+                }
+                index_current++;
             }
         }
-        return null;
     }
 
-    public synchronized boolean writeInTopic(String type_of_topic, String message,int time_to_leave) {
-        for (Topic topic : topics) {
-            if ((topic.getType()).equals(type_of_topic)) {
-                topic.addMessage(message);
-                new EraserMessages(topic,time_to_leave,message,this).start();
-                return true;
+    public ArrayList<String> getAllTopicsType() {
+        synchronized (objectLockTopic) {
+            ArrayList<String> topics_type = new ArrayList<String>();
+            if (topics.size() == 0) return null;
+            for (Topic topic : topics) {
+                topics_type.add(topic.getType());
             }
+            return topics_type;
         }
-        return false;
     }
 
+    public ArrayList<String> getMessagesFromTopic(String type_of_topic) {
+        synchronized (objectLockTopic) {
+            for (Topic topic : topics) {
+                if ((topic.getType()).equals(type_of_topic)) {
+                    if (topic.getMessages() != null)
+                        return topic.getMessages();
+                }
+            }
+            return null;
+        }
+    }
+
+    public boolean writeInTopic(String type_of_topic, String message,int time_to_leave) {
+        synchronized (objectLockTopic) {
+            for (Topic topic : topics) {
+                if ((topic.getType()).equals(type_of_topic)) {
+                    topic.addMessage(message);
+                    new EraserMessages(topic, time_to_leave, message, this).start();
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 
     public Server(int port) {
         this.port = port;
     }
-
 
     public void execute() {
         System.out.println("Server started ...");
@@ -90,10 +177,8 @@ public class Server {
         }
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] argv) {
         Server server = new Server(5555);
         server.execute();
     }
 }
-
-

@@ -1,4 +1,5 @@
 public class EraserTopics extends Thread {
+
     private Topic topic;
     private Server server;
 

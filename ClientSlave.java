@@ -1,17 +1,17 @@
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
-
 import static java.lang.Integer.parseInt;
 
 public class ClientSlave extends Thread {
 
-    Server server;
-    Socket socket;
-    String nameClient;
-    BufferedReader clientInput;
-    PrintWriter clientOutput;
+    private Server server;
+    private Socket socket;
+    private String nameClient;
+    private BufferedReader clientInput;
+    private PrintWriter clientOutput;
+    private int ok=0;
+
 
     public ClientSlave(Server server, Socket socket) {
         this.server = server;
@@ -27,19 +27,26 @@ public class ClientSlave extends Thread {
     private void executeTask(String response) {
 
         if (response.equals("menu")) {
-            clientOutput.println("For add TOPICS type -> add topic | [type_of_topic] | [time_to_leave_in_minutes]");
-            clientOutput.println("To see TOPICS_TYPE available type -> read topics_type");
-            clientOutput.println("To display message from a topic -> display message | [type of topic]");
-            clientOutput.println("To write in a topic type -> write | [type_of_topic] | [message] | [time_to_leave_in_minutes]");
+
+            clientOutput.println("DISPLAY ALL CLIENTS -> display clients");
+            clientOutput.println("SEND PRIVATE MESSAGE -> send message | [message] | [receiver]");
+            clientOutput.println("DISPLAY YOUR PRIVATE MESSAGES -> receive messages");
+            clientOutput.println("DISPLAY AVAILABLE TOPICS -> read topics_type");
+            clientOutput.println("DISPLAY MESSAGES FROM A TOPIC -> display message | [type of topic]");
+            clientOutput.println("ADD TOPIC -> add topic | [type_of_topic] | [time_to_leave_in_minutes]");
+            clientOutput.println("WRITE IN A TOPIC -> write | [type_of_topic] | [message] | [time_to_leave_in_minutes]");
+            clientOutput.println("QUIT -> quit");
+
         } else if (response.contains("add topic")) {
             String[] arrayWords = response.split("\\| ");
             String type_of_topic = arrayWords[1].substring(0, arrayWords[1].length() - 1);
             int time_to_leave_in_minutes = parseInt(arrayWords[2]);
-            System.out.println(type_of_topic + " "+time_to_leave_in_minutes);
-            if (server.addTopic(new Topic(type_of_topic, time_to_leave_in_minutes)) == true)
-                clientOutput.println("Topic added with succesfully");
+            System.out.println("Topic added: "+type_of_topic + " Time: "+time_to_leave_in_minutes);
+            if (server.addTopic(new Topic(type_of_topic, time_to_leave_in_minutes)))
+                clientOutput.println("Topic added with successfully");
             else
                 clientOutput.println("Sorry but a topic with this type already exists");
+
         } else if (response.equals("read topics_type")) {
             ArrayList<String> topics_type = server.getAllTopicsType();
             if (topics_type ==null)
@@ -53,7 +60,8 @@ public class ClientSlave extends Thread {
                     clientOutput.println("Topic " + index_topic_type++ + " : " + topic);
                 }
             }
-        } else if (response.contains("display message ")) {
+
+        }else if (response.contains("display message ")) {
             String[] arrayWords = response.split("\\| ");
             String type_of_topic = arrayWords[1];
             ArrayList<String> messages = server.getMessagesFromTopic(type_of_topic);
@@ -62,35 +70,86 @@ public class ClientSlave extends Thread {
                     clientOutput.println("The message is : " + message);
                 }
             } else {
-                clientOutput.println("Sorry but this topic doesn't exist , it expires or it haven't any messages");
+                clientOutput.println("Sorry but this topic doesn't exist, it has expired or it doesn't have any messages.");
             }
-        }else if(response.contains("write"))
+
+        }else if (response.contains("display clients")) {
+
+                clientOutput.println(server.getNames());
+        }
+        else if(response.contains("write"))
         {
             String[] arrayWords = response.split("\\|");
             String type_of_topic = arrayWords[1].substring(1,arrayWords[1].length()-1);
             String message = arrayWords[2].substring(1,arrayWords[2].length()-1);
             int time_to_leave = Integer.parseInt(arrayWords[3].substring(1));
-//            System.out.println(type_of_topic + " "+message+" "+time_to_leave);
-            if(server.writeInTopic(type_of_topic,message,time_to_leave)==true)
-                clientOutput.println("Writing in topic succeded");
+            if(server.writeInTopic(type_of_topic, message, time_to_leave))
+                clientOutput.println("Writing in topic succeeded");
             else
-                clientOutput.println("The topic doesn't exists or it expires");
+                clientOutput.println("The topic doesn't exist or it has expired.");
+
+        }else if(response.contains("send message")) {
+            String[] arrayWords = response.split("\\|");
+            String message = arrayWords[1].substring(1, arrayWords[1].length() - 1);
+            String receiver = arrayWords[2].substring(1);
+
+            System.out.println("Queue Updated:");
+            String transmitter=nameClient;
+            Message message1 = new Message(message,receiver,transmitter);
+            server.addMessageInQueue(message1);
+
+        }else if(response.contains("receive messages")) {
+            ArrayList <Message> messages=server.receiveMessagesFromQueue(this.nameClient);
+            clientOutput.println("Your messages: \n");
+            if(messages.size()!=0)
+            {
+                for(Message m : messages)
+                {
+                    clientOutput.println(m.displayMessageForClientSlave());
+                }
+            }
+            else
+                clientOutput.println("No messages available.");
+        }else if(response.equals("quit")){
+            clientOutput.println(("Bye"));
+            this.server.deleteNameClient(nameClient);
+            if(socket!=null) {
+                try {
+                    this.socket.close();
+                    ok=1;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }else{
+            clientOutput.println("Incorrect command!");
         }
+
+
     }
+
+
     public void run() {
         try {
+            try{
+                Thread.sleep(100);
+            }catch(InterruptedException ex){
+                ex.printStackTrace();
+            }
+
             String response;
             response = clientInput.readLine();
             this.nameClient = response;
+            server.addName(nameClient);
             while (true) {
                 response = clientInput.readLine();
                 executeTask(response);
+                if(ok==1)
+                    break;
+
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-
+            } catch(IOException e){
+                e.printStackTrace();
+            }
         }
-    }
-
 }
