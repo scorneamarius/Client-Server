@@ -114,7 +114,7 @@ public class ClientSlave extends Thread {
                 clientOutput.println("No messages available.");
 
         }else if(response.equals("quit")){
-            clientOutput.println(("Bye"));
+            clientOutput.println(("quit"));
             this.server.deleteNameClient(nameClient);
             if(socket!=null) {
                 try {
