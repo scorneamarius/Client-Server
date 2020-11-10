@@ -23,6 +23,7 @@ public class Client {
         try {
 
             socket=new Socket(hostname,port);
+
             System.out.println("Connected to the server.");
 
             ClientReader clientReader = new ClientReader(socket , this);
@@ -52,7 +53,9 @@ public class Client {
             e.printStackTrace();
         }
 
+
         Client client = new Client(5555, "localhost",inputName);
+
         client.execute();
     }
 }

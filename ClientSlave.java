@@ -13,6 +13,7 @@ public class ClientSlave extends Thread {
     private int ok=0;
 
 
+
     public ClientSlave(Server server, Socket socket) {
         this.server = server;
         this.socket = socket;
@@ -36,6 +37,7 @@ public class ClientSlave extends Thread {
             clientOutput.println("ADD TOPIC -> add topic | [type_of_topic] | [time_to_leave_in_minutes]");
             clientOutput.println("WRITE IN A TOPIC -> write | [type_of_topic] | [message] | [time_to_leave_in_minutes]");
             clientOutput.println("QUIT -> quit");
+
 
         } else if (response.contains("add topic")) {
             String[] arrayWords = response.split("\\| ");
@@ -110,6 +112,7 @@ public class ClientSlave extends Thread {
             }
             else
                 clientOutput.println("No messages available.");
+
         }else if(response.equals("quit")){
             clientOutput.println(("quit"));
             this.server.deleteNameClient(nameClient);
@@ -123,6 +126,7 @@ public class ClientSlave extends Thread {
             }
         }else{
             clientOutput.println("Incorrect command!");
+
         }
 
 
@@ -144,6 +148,7 @@ public class ClientSlave extends Thread {
             while (true) {
                 response = clientInput.readLine();
                 executeTask(response);
+
                 if(ok==1)
                     break;
 
@@ -152,4 +157,5 @@ public class ClientSlave extends Thread {
                 e.printStackTrace();
             }
         }
+
 }
